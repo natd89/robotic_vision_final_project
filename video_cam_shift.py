@@ -34,12 +34,14 @@ for frame in camera.capture_continuous(rawCapture, format='bgr', use_video_port=
         track_window = (c,r,w,h)
         
         # set up the ROI for tracking
-        # roi = image[r:r+h, c:c+w]
         hsv_roi = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
         # define range of blue color in HSV
-        lower_blue = np.array([0,0,0])
-        upper_blue = np.array([10,255,255])
+        #lower_color = np.array([10,10,10])
+        #upper_color = np.array([20,250,250])
+
+        lower_color = np.array([10,0,0])
+        upper_color = np.array([20,10,255])
 
         # Setup the termination criteria, either 10 iteration or move by atleast 1 pt
         term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1 )
@@ -47,13 +49,20 @@ for frame in camera.capture_continuous(rawCapture, format='bgr', use_video_port=
     else:
         # convert color to grayscale
         hsv_new = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    
+        gray_new = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
         # apply meanshift to get the new location
-        mask = cv2.inRange(cv2.GaussianBlur(hsv_new,(5,5),0), lower_blue, upper_blue)
-        #mask = cv2.dilate(mask,np.ones((6,6),np.uint8),iterations=1)
-        mask = cv2.erode(mask,np.ones((2,2),np.uint8),iterations=1)
-        mask[0:,0:17]=0
+        #mask = cv2.inRange(hsv_new, lower_color, upper_color)
+        ret, mask = cv2.threshold(gray_new,20,255,cv2.THRESH_BINARY_INV)
+        mask[0:,0:20]=0
         mask[0:,142:]=0
+
+        #mask = cv2.GaussianBlur(mask,(5,5),0)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((5,5),np.uint8))
+        mask = cv2.erode(mask,np.ones((5,5),np.uint8),iterations=1)
+        #mask = cv2.GaussianBlur(mask,(7,7),0)
+        mask = cv2.dilate(mask,np.ones((8,8),np.uint8),iterations=1)
+        #mask = cv2.GaussianBlur(mask,(7,7),0)
 
         ret, track_window = cv2.CamShift(mask, track_window, term_crit)
         
@@ -64,7 +73,7 @@ for frame in camera.capture_continuous(rawCapture, format='bgr', use_video_port=
         cntr = (int(center[0]),int(center[1]))
         cv2.polylines(image,[pts],True, 255,2)
         cv2.circle(image,cntr,3,(255,0,0),2)
-
+        
         cv2.imshow("frame",image)
         cv2.imshow("mask",mask)
         key = cv2.waitKey(1) & 0xFF
@@ -77,6 +86,6 @@ for frame in camera.capture_continuous(rawCapture, format='bgr', use_video_port=
         center = [(center[1]-64.)*5.25/128.,(center[0]-80.)*5.25/128.]
         ball_pos.data = center
         pub.publish(ball_pos)
-    
+        
     # clear the stream for the next frame
     rawCapture.truncate(0)

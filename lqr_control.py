@@ -46,8 +46,8 @@ class bc():
                       [0,0,1.,0],
                       [0,0,0,1.]])
         
-        R = np.array([[15000.,0],
-                      [0,15000.]])
+        R = np.array([[2.7,0],
+                      [0,2.7]])
 
         self.K = control.lqr(A,B,Q,R)
 
@@ -57,7 +57,7 @@ class bc():
         while not rospy.is_shutdown():
             # if start of program == 0, ball starts at (0,0)
             if self.flag:
-                pos_prev = np.array([[0],[0]])
+                pos_prev = np.array([[self.ball_pos[0][0]],[self.ball_pos[1][0]]])
                 self.flag=0            
                 # compute the LQR gain
                 self.compute_k()
@@ -71,12 +71,14 @@ class bc():
                              [ball_vel[0][0]],
                              [ball_vel[1][0]]])
 
+            print xhat.T
+            
             # compute the desired servo outputs
             u = np.matmul(-self.K[0],xhat)                    
             
             self.commands.data = [u[0],u[1]]
             self.pub.publish(self.commands)
-            
+            pos_prev = self.ball_pos
             self.rate.sleep()
 
             
