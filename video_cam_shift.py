@@ -38,8 +38,8 @@ for frame in camera.capture_continuous(rawCapture, format='bgr', use_video_port=
         hsv_roi = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
         # define range of blue color in HSV
-        lower_blue = np.array([60,20,20])
-        upper_blue = np.array([90,220,255])
+        lower_blue = np.array([0,0,0])
+        upper_blue = np.array([10,255,255])
 
         # Setup the termination criteria, either 10 iteration or move by atleast 1 pt
         term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1 )
