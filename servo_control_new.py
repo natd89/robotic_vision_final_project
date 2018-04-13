@@ -28,12 +28,14 @@ class servo_control():
         self.commands = np.array(msg.data)
 
     def send_i2c(self):
-        self.bus.write_i2c_block_data(self.address,1,[self.servo1,self.servo2])
-        #self.bus.write_data(self.address,self.servo1,self.servo2)
+        try:
+            self.bus.write_i2c_block_data(self.address,1,[self.servo1,self.servo2])
+        except IOError:
+            rospy.sleep(0.01)
 
     def convert_commands(self):
-        self.servo1 = int(-25.5*self.commands[0]+127.5-15)
-        self.servo2 = int(-25.5*self.commands[1]+127.5+5)
+        self.servo1 = int(-25.5*self.commands[0]+127.5)
+        self.servo2 = int(-25.5*self.commands[1]+127.5)
         self.servo1 = np.clip(self.servo1,0,255)
         self.servo2 = np.clip(self.servo2,0,255)
 
